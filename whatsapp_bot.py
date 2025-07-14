@@ -5,9 +5,9 @@ from phonenumbers import geocoder, carrier, timezone
 from twilio.twiml.messaging_response import MessagingResponse
 import os
 
-app = Flask(__name__)  # Make sure this is at the top level
+app = Flask(__name__)
 
-NUMVERIFY_API_KEY = os.environ.get("NUMVERIFY_API_KEY")  # Use env var from Render
+NUMVERIFY_API_KEY = os.environ.get("NUMVERIFY_API_KEY")  # Make sure it's set in Render
 
 def get_numverify_data(number: str):
     url = f"http://apilayer.net/api/validate?access_key={NUMVERIFY_API_KEY}&number={number}&format=1"
@@ -65,7 +65,11 @@ def whatsapp_reply():
 
     return str(response)
 
-# Only for local testing (ignored by Gunicorn in production)
+@app.route("/", methods=['GET'])
+def home():
+    return "✅ WhatsApp bot is live! Use the /whatsapp endpoint via POST."
+
+# Only needed for local development
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
