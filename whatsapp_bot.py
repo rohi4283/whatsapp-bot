@@ -6,7 +6,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 import os
 
 app = Flask(__name__)
-NUMVERIFY_API_KEY = os.getenv("NUMVERIFY_API_KEY", "YOUR_NUMVERIFY_API_KEY")  # use .env or render env vars
+NUMVERIFY_API_KEY = os.getenv("NUMVERIFY_API_KEY", "f4ddf206a158a144437617bdf02320b0")  # use .env or render env vars
 
 def get_numverify_data(number: str):
     url = f"http://apilayer.net/api/validate?access_key={NUMVERIFY_API_KEY}&number={number}&format=1"
