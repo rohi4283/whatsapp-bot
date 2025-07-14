@@ -1,0 +1,5 @@
+Flask
+twilio
+requests
+phonenumbers
+python-dotenv
