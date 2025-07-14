@@ -5,8 +5,9 @@ from phonenumbers import geocoder, carrier, timezone
 from twilio.twiml.messaging_response import MessagingResponse
 import os
 
-app = Flask(__name__)
-NUMVERIFY_API_KEY = os.getenv("NUMVERIFY_API_KEY", "f4ddf206a158a144437617bdf02320b0")  # use .env or render env vars
+app = Flask(__name__)  # Make sure this is at the top level
+
+NUMVERIFY_API_KEY = os.environ.get("NUMVERIFY_API_KEY")  # Use env var from Render
 
 def get_numverify_data(number: str):
     url = f"http://apilayer.net/api/validate?access_key={NUMVERIFY_API_KEY}&number={number}&format=1"
@@ -46,10 +47,25 @@ def get_number_info(number: str):
     result.update(get_numverify_data(number))
     return result
 
-@app.route("/", methods=["GET"])
-def home():
-    return "✅ WhatsApp bot is live!"
-
-@app.route("/webhook", methods=['POST'])
+@app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
-    incoming_msg = reques_
+    incoming_msg = request.form.get('Body', '').strip()
+    response = MessagingResponse()
+    msg = response.message()
+
+    if incoming_msg.startswith('+'):
+        details = get_number_info(incoming_msg)
+        if "error" in details:
+            msg.body(f"❌ Error: {details['error']}")
+        else:
+            result_text = "\n".join([f"{k}: {v}" for k, v in details.items()])
+            msg.body(f"📋 Phone Info:\n{result_text}")
+    else:
+        msg.body("👋 Send a phone number starting with `+` (e.g. +254712345678) to get details.")
+
+    return str(response)
+
+# Only for local testing (ignored by Gunicorn in production)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
