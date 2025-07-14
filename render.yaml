@@ -7,4 +7,4 @@ services:
     startCommand: gunicorn whatsapp_bot:app
     envVars:
       - key: NUMVERIFY_API_KEY
-        value: f4ddf206a158a144437617bdf02320b0  # Replace with your real API key
+        value: f4ddf206a158a144437617bdf02320b0
