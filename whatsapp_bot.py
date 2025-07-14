@@ -3,12 +3,6 @@ import phonenumbers
 import requests
 from phonenumbers import geocoder, carrier, timezone
 from twilio.twiml.messaging_response import MessagingResponse
-
-@app.route("/")
-def index():
-    return "🟢 WhatsApp bot is running!"
-
-
 app = Flask(__name__)
 
 NUMVERIFY_API_KEY = "YOUR_NUMVERIFY_API_KEY"  # Replace this with your API key
@@ -28,6 +22,13 @@ def get_numverify_data(number: str):
         "📡 Carrier": data.get("carrier", "N/A"),
         "📞 Line Type": data.get("line_type", "N/A"),
     }
+
+import os
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
 
 def get_phonenumbers_data(number: str):
     try:
@@ -69,6 +70,5 @@ def whatsapp_reply():
 
     return str(response)
 
-if __name__ == "__main__":
- app.run(host="0.0.0.0", port=5000)
+
 
