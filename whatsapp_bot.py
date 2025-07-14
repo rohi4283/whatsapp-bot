@@ -7,7 +7,7 @@ import os
 
 app = Flask(__name__)
 
-NUMVERIFY_API_KEY = os.environ.get("NUMVERIFY_API_KEY")  # Make sure it's set in Render
+NUMVERIFY_API_KEY = os.environ.get("NUMVERIFY_API_KEY")  # Ensure this is set on Render
 
 def get_numverify_data(number: str):
     url = f"http://apilayer.net/api/validate?access_key={NUMVERIFY_API_KEY}&number={number}&format=1"
@@ -50,6 +50,7 @@ def get_number_info(number: str):
 @app.route("/whatsapp", methods=['POST'])
 def whatsapp_reply():
     incoming_msg = request.form.get('Body', '').strip()
+    print(f"✅ Received: {incoming_msg}")  # For debugging/logs
     response = MessagingResponse()
     msg = response.message()
 
@@ -69,7 +70,7 @@ def whatsapp_reply():
 def home():
     return "✅ WhatsApp bot is live! Use the /whatsapp endpoint via POST."
 
-# Only needed for local development
+# Local development only
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
