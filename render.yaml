@@ -8,4 +8,3 @@ services:
     envVars:
       - key: NUMVERIFY_API_KEY
         value: f4ddf206a158a144437617bdf02320b0
-
