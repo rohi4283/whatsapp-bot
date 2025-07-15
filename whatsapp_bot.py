@@ -7,16 +7,16 @@ import os
 
 app = Flask(__name__)
 
-# Environment Variables (configured in Render Dashboard or render.yaml)
-NUMVERIFY_API_KEY = os.environ.get("NUMVERIFY_API_KEY")
-NUMLOOKUP_API_KEY = os.environ.get("NUMLOOKUP_API_KEY")
+# API keys from environment
+NUMVERIFY_API_KEY = os.environ.get("f4ddf206a158a144437617bdf02320b0")
+NUMLOOKUP_API_KEY = os.environ.get("num_live_tjReMv76QQpxH05ZjYxuXHem6SfjvrStnLw0UTAq")
 
+# Local phone lib
 def get_phonenumbers_data(number: str):
     try:
         parsed = phonenumbers.parse(number)
         if not phonenumbers.is_valid_number(parsed):
             return {"error": "Invalid phone number format."}
-
         return {
             "✅ Valid": "Yes",
             "📞 Formatted": phonenumbers.format_number(parsed, phonenumbers.PhoneNumberFormat.INTERNATIONAL),
@@ -27,29 +27,30 @@ def get_phonenumbers_data(number: str):
     except Exception as e:
         return {"error": f"Parse error: {e}"}
 
+# Numverify API
 def get_numverify_data(number: str):
     if not NUMVERIFY_API_KEY:
         return {"error": "Numverify API key missing."}
-
     url = f"http://apilayer.net/api/validate?access_key={NUMVERIFY_API_KEY}&number={number}&format=1"
-    response = requests.get(url)
-    data = response.json()
+    try:
+        response = requests.get(url)
+        data = response.json()
+        if not data.get("valid"):
+            return {"error": "Numverify: Invalid number or quota exceeded."}
+        return {
+            "🌍 Country": data.get("country_name", "N/A"),
+            "🌐 Country Code": data.get("country_code", "N/A"),
+            "📍 Location (API)": data.get("location", "N/A"),
+            "📡 Carrier (API)": data.get("carrier", "N/A"),
+            "📞 Line Type": data.get("line_type", "N/A"),
+        }
+    except Exception as e:
+        return {"error": f"Numverify error: {e}"}
 
-    if not data.get("valid"):
-        return {"error": "Invalid number or Numverify quota exceeded."}
-
-    return {
-        "🌍 Country": data.get("country_name", "N/A"),
-        "🌐 Country Code": data.get("country_code", "N/A"),
-        "📍 Location (API)": data.get("location", "N/A"),
-        "📡 Carrier (API)": data.get("carrier", "N/A"),
-        "📞 Line Type": data.get("line_type", "N/A"),
-    }
-
+# Numlookup API
 def get_numlookup_data(number: str):
     if not NUMLOOKUP_API_KEY:
         return {"error": "Numlookup API key missing."}
-
     url = f"https://api.numlookupapi.com/v1/validate/{number}?apikey={NUMLOOKUP_API_KEY}"
     try:
         response = requests.get(url)
@@ -65,11 +66,21 @@ def get_numlookup_data(number: str):
     except Exception as e:
         return {"error": f"Numlookup error: {e}"}
 
+# Combine all
 def get_number_info(number: str):
     result = {}
-    result.update(get_phonenumbers_data(number))
-    result.update(get_numverify_data(number))
-    result.update(get_numlookup_data(number))
+    errors = []
+
+    for fetcher in [get_phonenumbers_data, get_numverify_data, get_numlookup_data]:
+        data = fetcher(number)
+        if "error" in data:
+            errors.append(data["error"])
+        else:
+            result.update(data)
+
+    if errors and not result:
+        return {"error": "; ".join(errors)}
+
     return result
 
 @app.route("/whatsapp", methods=["POST"])
@@ -81,7 +92,7 @@ def whatsapp_reply():
     if incoming_msg.startswith("+"):
         details = get_number_info(incoming_msg)
         if "error" in details:
-            msg.body(f"❌ Error: {details['error']}")
+            msg.body(f"❌ One or more errors:\n{details['error']}")
         else:
             result_text = "\n".join([f"{k}: {v}" for k, v in details.items()])
             msg.body(f"📋 Phone Info:\n{result_text}")
@@ -94,7 +105,6 @@ def whatsapp_reply():
 def home():
     return "✅ WhatsApp bot is live! Use the /whatsapp endpoint via POST."
 
-# Local dev only
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
