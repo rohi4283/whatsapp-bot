@@ -8,3 +8,6 @@ services:
     envVars:
       - key: NUMVERIFY_API_KEY
         value: f4ddf206a158a144437617bdf02320b0
+
+      - key: NUMLOOKUP_API_KEY
+        value: num_live_tjReMv76QQpxH05ZjYxuXHem6SfjvrStnLw0UTAq
